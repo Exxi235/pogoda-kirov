@@ -23,57 +23,24 @@ runtime:
     - type: after-response
       code: |-
         const data = res.getBody();
+          if (data.current) {
+              const temp = data.current.temperature_2m;
+              const city = bru.getEnvVar("city");
+              const token = bru.getEnvVar("tg_token");
+              const chatId = bru.getEnvVar("tg_chat_id");
 
+              let advice = "";
+              if (temp < 0) { advice = "❄️ На улице мороз! Одевайся как полярник!"; }
+              else if (temp < 10) { advice = "🧥 Холодно, надень куртку."; }
+              else if (temp < 20) { advice = "🍃 Прохладно, лучше накинуть ветровку."; }
+              else { advice = "☀️ Погода — кайф! Можно идти в футболке."; }
 
-        if (data.current) {
-            const temp = data.current.temperature_2m;
-            const city = bru.getEnvVar("city");
-            const token = bru.getEnvVar("tg_token");
-            const chatId = bru.getEnvVar("tg_chat_id");
+              const message = `🌤 Погода в г. ${city}\n🌡 Температура: ${temp}°C\n\n${advice}`;
 
-
-            console.log("----------------------------");
-            console.log("ГОРОД: " + city);
-            console.log("Температура: " + temp + "°C");
-            console.log("----------------------------");
-
-
-            if (token && chatId) {
-                const message = "🌤 Погода в г. " + city + "\n🌡 Температура: " + temp + "°C";
-
-                axios.post(`https://api.telegram.org/bot${token}/sendMessage`, {
-                    chat_id: chatId,
-                    text: message
-                })
-                .then(() => console.log("✅ Сообщение в Telegram отправлено!"))
-                .catch((err) => console.log("❌ Ошибка Telegram: " + err.message));
-            }
-        } else {
-            console.log("⚠️ Сервер не прислал данные о погоде. Проверь окружение (Environment)!");
-        }
-    - type: tests
-      code: |-
-        test("Киров ответил успешно", function() {
-          // Проверяем, что сервер выдал статус 200 (ОК)
-          expect(res.getStatus()).to.equal(200);
-        });
-
-        test("В ответе есть данные о температуре", function() {
-          const data = res.getBody();
-          // Проверяем, что в данных есть поле temperature_2m
-          expect(data.current.temperature_2m).to.be.a('number');
-        });
-        const data = res.getBody();
-        const temp = data.current.temperature_2m;
-        const city = bru.getEnvVar("city");
-
-        test("Погода в городе " + city + "комфортная для прогулок", function() {
-          // Допустим, мы считаем, что выше +35°C — это уже слишком жарко
-          expect(temp).to.be.below(35);
-        });
-
-settings:
-  encodeUrl: true
-  timeout: 0
-  followRedirects: true
-  maxRedirects: 5
+              if (token && chatId) {
+                  await axios.post(`https://api.telegram.org/bot${token}/sendMessage`, {
+                      chat_id: chatId,
+                      text: message
+                  });
+              }
+          }
