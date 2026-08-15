@@ -1,0 +1,31 @@
+name: Hourly Weather Bot
+
+on:
+  schedule:
+    # Запуск ровно в 00 минут каждого часа
+    - cron: '0 * * * *'
+  workflow_dispatch: # Позволяет запускать вручную кнопкой
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Bruno CLI
+        run: npm install -g @usebruno/cli
+
+      - name: Run Bruno Request
+        run: |
+          bru run kirov_weather.yml \
+            --env-var tg_token="${{ secrets.TG_TOKEN }}" \
+            --env-var tg_chat_id="${{ secrets.TG_CHAT_ID }}" \
+            --env-var lat="${{ secrets.LAT }}" \
+            --env-var lon="${{ secrets.LON }}" \
+            --env-var city="${{ secrets.CITY }}"
