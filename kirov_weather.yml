@@ -22,7 +22,7 @@ runtime:
   scripts:
     - type: after-response
       code: |-
-        const data = res.getBody();
+       const data = res.getBody();
           if (data.current) {
               const temp = data.current.temperature_2m;
               const code = data.current.weather_code;
@@ -30,19 +30,46 @@ runtime:
               const token = bru.getEnvVar("tg_token");
               const chatId = bru.getEnvVar("tg_chat_id");
 
-              let icon = "03d";
-              let weatherDesc = "Облачно";
+              let imgName = "default.jpg";
+              let weatherDesc = "";
 
-              if (code === 0) { icon = "01d"; weatherDesc = "Ясно ☀️"; } 
-              else if (code >= 1 && code <= 2) { icon = "02d"; weatherDesc = "Переменная облачность 🌤"; } 
-              else if (code === 3) { icon = "03d"; weatherDesc = "Пасмурно ☁️"; } 
-              else if (code === 45 || code === 48) { icon = "50d"; weatherDesc = "Туман 🌫"; } 
-              else if (code >= 51 && code <= 57) { icon = "10d"; weatherDesc = "Мелкая морось 🌦"; } 
-              else if (code >= 61 && code <= 67) { icon = "09d"; weatherDesc = "Дождь 🌧"; } 
-              else if (code >= 71 && code <= 77) { icon = "13d"; weatherDesc = "Снегопад ❄️"; } 
-              else if (code >= 80 && code <= 82) { icon = "09d"; weatherDesc = "Ливень 🚿"; } 
-              else if (code >= 85 && code <= 86) { icon = "13d"; weatherDesc = "Сильный снег 🌨"; } 
-              else if (code >= 95) { icon = "11d"; weatherDesc = "Гроза ⚡️"; }
+              // ПОЛНАЯ ДЕТАЛЬНАЯ ЛОГИКА
+              if (code === 0) {
+                  imgName = "sun.jpg"; weatherDesc = "Ясное небо ☀️";
+              } 
+              else if (code >= 1 && code <= 2) {
+                  imgName = "sun_cloud.jpg"; weatherDesc = "Переменная облачность 🌤";
+              } 
+              else if (code === 3) {
+                  imgName = "cloud.jpg"; weatherDesc = "Пасмурно ☁️";
+              } 
+              else if (code === 45 || code === 48) {
+                  imgName = "fog.jpg"; weatherDesc = "Туман 🌫";
+              } 
+              else if (code >= 51 && code <= 57) {
+                  imgName = "drizzle.jpg"; weatherDesc = "Мелкая морось 🌦";
+              } 
+              else if (code >= 61 && code <= 65) {
+                  imgName = "rain.jpg"; weatherDesc = "Идет дождь 🌧";
+              } 
+              else if (code >= 66 && code <= 67) {
+                  imgName = "ice_rain.jpg"; weatherDesc = "Ледяной дождь 🧊🌧";
+              } 
+              else if (code >= 71 && code <= 77) {
+                  imgName = "snow.jpg"; weatherDesc = "Снегопад ❄️";
+              } 
+              else if (code >= 80 && code <= 82) {
+                  imgName = "heavy_rain.jpg"; weatherDesc = "Ливневые дожди 🚿🌧";
+              } 
+              else if (code >= 85 && code <= 86) {
+                  imgName = "snow.jpg"; weatherDesc = "Сильный снег 🌨";
+              } 
+              else if (code >= 95) {
+                  imgName = "storm.jpg"; weatherDesc = "Гроза ⚡️";
+              }
+
+              // Ссылка на твой GitHub (Exxi235)
+              const imageUrl = `https://raw.githubusercontent.com/Exxi235/pogoda-kirov/main/images/${imgName}`;
 
               let advice = "";
               if (temp < 0) { advice = "❄️ На улице мороз! Одевайся как полярник!"; } 
@@ -50,7 +77,6 @@ runtime:
               else if (temp < 18) { advice = "🍃 Прохладно, лучше накинуть ветровку."; } 
               else { advice = "☀️ Погода — кайф! Можно идти в футболке."; }
 
-              const imageUrl = `https://openweathermap.org/img/wn/${icon}@4x.png`;
               const message = `📍 г. ${city}\n🌡 Температура: ${temp}°C\n📝 На улице: ${weatherDesc}\n\n${advice}`;
 
               if (token && chatId) {
