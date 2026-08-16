@@ -22,7 +22,7 @@ runtime:
   scripts:
     - type: after-response
       code: |-
-       const data = res.getBody();
+      const data = res.getBody();
           if (data.current) {
               const temp = data.current.temperature_2m;
               const code = data.current.weather_code;
@@ -30,10 +30,10 @@ runtime:
               const token = bru.getEnvVar("tg_token");
               const chatId = bru.getEnvVar("tg_chat_id");
 
-              let imgName = "default.jpg";
+              let imgName = "cloudy.jpg"; // По умолчанию
               let weatherDesc = "";
 
-              // ПОЛНАЯ ДЕТАЛЬНАЯ ЛОГИКА
+              // Привязка твоих картинок к кодам погоды
               if (code === 0) {
                   imgName = "sun.jpg"; weatherDesc = "Ясное небо ☀️";
               } 
@@ -41,34 +41,31 @@ runtime:
                   imgName = "sun_cloud.jpg"; weatherDesc = "Переменная облачность 🌤";
               } 
               else if (code === 3) {
-                  imgName = "cloud.jpg"; weatherDesc = "Пасмурно ☁️";
+                  imgName = "cloudy.jpg"; weatherDesc = "Пасмурно ☁️";
               } 
               else if (code === 45 || code === 48) {
                   imgName = "fog.jpg"; weatherDesc = "Туман 🌫";
               } 
               else if (code >= 51 && code <= 57) {
-                  imgName = "drizzle.jpg"; weatherDesc = "Мелкая морось 🌦";
+                  imgName = "drizzle.jpg"; weatherDesc = "Морось 🌦";
               } 
               else if (code >= 61 && code <= 65) {
                   imgName = "rain.jpg"; weatherDesc = "Идет дождь 🌧";
-              } 
-              else if (code >= 66 && code <= 67) {
-                  imgName = "ice_rain.jpg"; weatherDesc = "Ледяной дождь 🧊🌧";
               } 
               else if (code >= 71 && code <= 77) {
                   imgName = "snow.jpg"; weatherDesc = "Снегопад ❄️";
               } 
               else if (code >= 80 && code <= 82) {
-                  imgName = "heavy_rain.jpg"; weatherDesc = "Ливневые дожди 🚿🌧";
+                  imgName = "heavy_rain.jpg"; weatherDesc = "Ливень 🚿🌧";
               } 
               else if (code >= 85 && code <= 86) {
-                  imgName = "snow.jpg"; weatherDesc = "Сильный снег 🌨";
+                  imgName = "heavy_snow.jpg"; weatherDesc = "Сильный снег 🌨";
               } 
               else if (code >= 95) {
-                  imgName = "storm.jpg"; weatherDesc = "Гроза ⚡️";
+                  imgName = "thunderstorm.jpg"; weatherDesc = "Гроза ⚡️";
               }
 
-              // Ссылка на твой GitHub (Exxi235)
+              // Ссылка на твой репозиторий и папку images
               const imageUrl = `https://raw.githubusercontent.com/Exxi235/pogoda-kirov/main/images/${imgName}`;
 
               let advice = "";
