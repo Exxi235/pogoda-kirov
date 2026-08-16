@@ -5,7 +5,7 @@ info:
 
 http:
   method: GET
-  url: https://api.open-meteo.com/v1/forecast?latitude={{lat}}&longitude={{lon}}&current=temperature_2m
+  url: https://api.open-meteo.com/v1/forecast?latitude={{lat}}&longitude={{lon}}&current=temperature_2m,weather_code
   params:
     - name: latitude
       value: "{{lat}}"
@@ -25,22 +25,39 @@ runtime:
         const data = res.getBody();
           if (data.current) {
               const temp = data.current.temperature_2m;
+              const code = data.current.weather_code;
               const city = bru.getEnvVar("city");
               const token = bru.getEnvVar("tg_token");
               const chatId = bru.getEnvVar("tg_chat_id");
 
+              let icon = "03d";
+              let weatherDesc = "Облачно";
+
+              if (code === 0) { icon = "01d"; weatherDesc = "Ясно ☀️"; } 
+              else if (code >= 1 && code <= 2) { icon = "02d"; weatherDesc = "Переменная облачность 🌤"; } 
+              else if (code === 3) { icon = "03d"; weatherDesc = "Пасмурно ☁️"; } 
+              else if (code === 45 || code === 48) { icon = "50d"; weatherDesc = "Туман 🌫"; } 
+              else if (code >= 51 && code <= 57) { icon = "10d"; weatherDesc = "Мелкая морось 🌦"; } 
+              else if (code >= 61 && code <= 67) { icon = "09d"; weatherDesc = "Дождь 🌧"; } 
+              else if (code >= 71 && code <= 77) { icon = "13d"; weatherDesc = "Снегопад ❄️"; } 
+              else if (code >= 80 && code <= 82) { icon = "09d"; weatherDesc = "Ливень 🚿"; } 
+              else if (code >= 85 && code <= 86) { icon = "13d"; weatherDesc = "Сильный снег 🌨"; } 
+              else if (code >= 95) { icon = "11d"; weatherDesc = "Гроза ⚡️"; }
+
               let advice = "";
-              if (temp < 0) { advice = "❄️ На улице мороз! Одевайся как полярник!"; }
-              else if (temp < 10) { advice = "🧥 Холодно, надень куртку."; }
-              else if (temp < 20) { advice = "🍃 Прохладно, лучше накинуть ветровку."; }
+              if (temp < 0) { advice = "❄️ На улице мороз! Одевайся как полярник!"; } 
+              else if (temp < 10) { advice = "🧥 Холодно, без теплой куртки не выходи."; } 
+              else if (temp < 18) { advice = "🍃 Прохладно, лучше накинуть ветровку."; } 
               else { advice = "☀️ Погода — кайф! Можно идти в футболке."; }
 
-              const message = `🌤 Погода в г. ${city}\n🌡 Температура: ${temp}°C\n\n${advice}`;
+              const imageUrl = `https://openweathermap.org/img/wn/${icon}@4x.png`;
+              const message = `📍 г. ${city}\n🌡 Температура: ${temp}°C\n📝 На улице: ${weatherDesc}\n\n${advice}`;
 
               if (token && chatId) {
-                  await axios.post(`https://api.telegram.org/bot${token}/sendMessage`, {
+                  await axios.post(`https://api.telegram.org/bot${token}/sendPhoto`, {
                       chat_id: chatId,
-                      text: message
+                      photo: imageUrl,
+                      caption: message
                   });
               }
           }
