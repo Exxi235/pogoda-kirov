@@ -1,86 +1,55 @@
-info:
-  name: погода киров
+meta {
+  name: Погода Киров
   type: http
   seq: 1
+}
 
-http:
-  method: GET
+get {
   url: https://api.open-meteo.com/v1/forecast?latitude={{lat}}&longitude={{lon}}&current=temperature_2m,weather_code
-  params:
-    - name: latitude
-      value: "{{lat}}"
-      type: query
-    - name: longitude
-      value: "{{lon}}"
-      type: query
-    - name: current
-      value: temperature_2m
-      type: query
-  auth: inherit
+  body: none
+  auth: none
+}
 
-runtime:
-  scripts:
-    - type: after-response
-      code: |-
-      const data = res.getBody();
-          if (data.current) {
-              const temp = data.current.temperature_2m;
-              const code = data.current.weather_code;
-              const city = bru.getEnvVar("city");
-              const token = bru.getEnvVar("tg_token");
-              const chatId = bru.getEnvVar("tg_chat_id");
+script:post-response {
+  const data = res.getBody();
+  if (data.current) {
+      const temp = data.current.temperature_2m;
+      const code = data.current.weather_code;
+      const city = bru.getEnvVar("city");
+      const token = bru.getEnvVar("tg_token");
+      const chatId = bru.getEnvVar("tg_chat_id");
 
-              let imgName = "cloudy.jpg"; // По умолчанию
-              let weatherDesc = "";
+      let imgName = "cloudy.jpg";
+      let weatherDesc = "";
 
-              // Привязка твоих картинок к кодам погоды
-              if (code === 0) {
-                  imgName = "sun.jpg"; weatherDesc = "Ясное небо ☀️";
-              } 
-              else if (code >= 1 && code <= 2) {
-                  imgName = "sun_cloud.jpg"; weatherDesc = "Переменная облачность 🌤";
-              } 
-              else if (code === 3) {
-                  imgName = "cloudy.jpg"; weatherDesc = "Пасмурно ☁️";
-              } 
-              else if (code === 45 || code === 48) {
-                  imgName = "fog.jpg"; weatherDesc = "Туман 🌫";
-              } 
-              else if (code >= 51 && code <= 57) {
-                  imgName = "drizzle.jpg"; weatherDesc = "Морось 🌦";
-              } 
-              else if (code >= 61 && code <= 65) {
-                  imgName = "rain.jpg"; weatherDesc = "Идет дождь 🌧";
-              } 
-              else if (code >= 71 && code <= 77) {
-                  imgName = "snow.jpg"; weatherDesc = "Снегопад ❄️";
-              } 
-              else if (code >= 80 && code <= 82) {
-                  imgName = "heavy_rain.jpg"; weatherDesc = "Ливень 🚿🌧";
-              } 
-              else if (code >= 85 && code <= 86) {
-                  imgName = "heavy_snow.jpg"; weatherDesc = "Сильный снег 🌨";
-              } 
-              else if (code >= 95) {
-                  imgName = "thunderstorm.jpg"; weatherDesc = "Гроза ⚡️";
-              }
+      if (code === 0) { imgName = "sun.jpg"; weatherDesc = "Ясное небо ☀️"; } 
+      else if (code >= 1 && code <= 2) { imgName = "sun_cloud.jpg"; weatherDesc = "Переменная облачность 🌤"; } 
+      else if (code === 3) { imgName = "cloudy.jpg"; weatherDesc = "Пасмурно ☁️"; } 
+      else if (code === 45 || code === 48) { imgName = "fog.jpg"; weatherDesc = "Туман 🌫"; } 
+      else if (code >= 51 && code <= 57) { imgName = "drizzle.jpg"; weatherDesc = "Морось 🌦"; } 
+      else if (code >= 61 && code <= 65) { imgName = "rain.jpg"; weatherDesc = "Идет дождь 🌧"; } 
+      else if (code >= 66 && code <= 67) { imgName = "ice_rain.jpg"; weatherDesc = "Ледяной дождь 🧊🌧"; } 
+      else if (code >= 71 && code <= 77) { imgName = "snow.jpg"; weatherDesc = "Снегопад ❄️"; } 
+      else if (code >= 80 && code <= 82) { imgName = "heavy_rain.jpg"; weatherDesc = "Ливень 🚿🌧"; } 
+      else if (code >= 85 && code <= 86) { imgName = "heavy_snow.jpg"; weatherDesc = "Сильный снег 🌨"; } 
+      else if (code >= 95) { imgName = "thunderstorm.jpg"; weatherDesc = "Гроза ⚡️"; }
 
-              // Ссылка на твой репозиторий и папку images
-              const imageUrl = `https://raw.githubusercontent.com/Exxi235/pogoda-kirov/main/images/${imgName}`;
+      const imageUrl = `https://raw.githubusercontent.com/Exxi235/pogoda-kirov/main/images/${imgName}`;
 
-              let advice = "";
-              if (temp < 0) { advice = "❄️ На улице мороз! Одевайся как полярник!"; } 
-              else if (temp < 10) { advice = "🧥 Холодно, без теплой куртки не выходи."; } 
-              else if (temp < 18) { advice = "🍃 Прохладно, лучше накинуть ветровку."; } 
-              else { advice = "☀️ Погода — кайф! Можно идти в футболке."; }
+      let advice = "";
+      if (temp < 0) { advice = "❄️ На улице мороз! Одевайся как полярник!"; } 
+      else if (temp < 10) { advice = "🧥 Холодно, без теплой куртки не выходи."; } 
+      else if (temp < 18) { advice = "🍃 Прохладно, лучше накинуть ветровку."; } 
+      else { advice = "☀️ Погода — кайф! Можно идти в футболке."; }
 
-              const message = `📍 г. ${city}\n🌡 Температура: ${temp}°C\n📝 На улице: ${weatherDesc}\n\n${advice}`;
+      const message = `📍 г. ${city}\n🌡 Температура: ${temp}°C\n📝 На улице: ${weatherDesc}\n\n${advice}`;
 
-              if (token && chatId) {
-                  await axios.post(`https://api.telegram.org/bot${token}/sendPhoto`, {
-                      chat_id: chatId,
-                      photo: imageUrl,
-                      caption: message
-                  });
-              }
-          }
+      if (token && chatId) {
+          await axios.post(`https://api.telegram.org/bot${token}/sendPhoto`, {
+              chat_id: chatId,
+              photo: imageUrl,
+              caption: message
+          });
+      }
+  }
+}
