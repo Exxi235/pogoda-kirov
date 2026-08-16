@@ -20,10 +20,10 @@ jobs:
 
       - name: Install Bruno CLI
         run: npm install -g @usebruno/cli
-
+        
       - name: Run Bruno Request
         run: |
-          bru run kirov_weather.yml \
+          bru run kirov.bru \
             --env-var tg_token="${{ secrets.TG_TOKEN }}" \
             --env-var tg_chat_id="${{ secrets.TG_CHAT_ID }}" \
             --env-var lat="${{ secrets.LAT }}" \
