@@ -42,14 +42,24 @@ script:post-response {
       else if (temp < 18) { advice = "🍃 Прохладно, лучше накинуть ветровку."; } 
       else { advice = "☀️ Погода — кайф! Можно идти в футболке."; }
 
+      // 1. Формируем текст (один для всех)
       const message = `📍 г. ${city}\n🌡 Температура: ${temp}°C\n📝 На улице: ${weatherDesc}\n\n${advice}`;
 
-      if (token && chatId) {
-          await axios.post(`https://api.telegram.org/bot${token}/sendPhoto`, {
-              chat_id: chatId,
-              photo: imageUrl,
-              caption: message
-          });
+      // 2. Берем строку с ID ("123,456") и превращаем в список (массив)
+      const rawIds = bru.getEnvVar("tg_chat_id");
+      const chatIds = rawIds.split(",");
+
+      if (token && chatIds.length > 0) {
+          // 3. Цикл: отправляем каждому по очереди
+          for (let id of chatIds) {
+              const cleanId = id.trim(); // убираем лишние пробелы
+              
+              await axios.post(`https://api.telegram.org/bot${token}/sendPhoto`, {
+                  chat_id: cleanId,
+                  photo: imageUrl,
+                  caption: message
+              })
+              .then(() => console.log(`✅ Отправлено пользователю: ${cleanId}`))
+              .catch((err) => console.log(`❌ Ошибка для ${cleanId}: ${err.message}`));
+          }
       }
-  }
-}
